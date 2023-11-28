@@ -7,7 +7,7 @@ from acs712 import read_current
 sensor = read_current()
 
 # Configuración del servidor
-url = 'http://192.168.0.137/'
+url = 'http://192.168.0.137'
 
 # Contador de ejecuciones
 executions_count = 0

@@ -1,0 +1,106 @@
+﻿#define BLYNK_PRINT Serial
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+
+int valor_inst=0;
+int pino_sensor=34;
+float tensao_rms=0;
+float tensao_pico=0;
+double menor_valor=0;
+
+char auth[] = "xxxxxxxxxx";
+char ssid[] = "xxxxxxxx";
+char pass[] = "xxxxxx";
+
+
+void setup(){
+
+ Serial.begin(9600);
+ pinMode(34,INPUT);
+ Blynk.begin(auth, ssid, pass);
+
+ 
+if ((xTaskCreate(task_sensor, "task_sensor", 4048, NULL, 5, NULL)) != pdTRUE) 
+   {
+       ESP_LOGI(TAG, "error - nao foi possivel alocar task_sensor.\n");
+       return;
+   }
+   else
+   {
+       Serial.println("Task criada com sucesso");
+   }
+if ((xTaskCreate(task_blynk, "task_blynk", 4048, NULL, 5, NULL)) != pdTRUE) 
+   {
+       ESP_LOGI(TAG, "error - nao foi possivel alocar task_blynk.\n");
+       return;
+   }
+   else
+   {
+       Serial.println("Task criada com sucesso");
+   }
+if ((xTaskCreate(task_senoide, "task_senoide", 4048, NULL, 6, NULL)) != pdTRUE) 
+   {
+       ESP_LOGI(TAG, "error - nao foi possivel alocar task_senoide.\n");
+       return;
+   }
+   else
+   {
+       Serial.println("Task criada com sucesso");
+   }
+
+}
+
+void loop(){}
+
+void task_sensor(void *pvParameter)
+{
+
+   for (;;)
+   {
+       menor_valor= 4095;
+ for(int i=0; i<120; i++){
+   valor_inst = analogRead(pino_sensor);
+   if(menor_valor > valor_inst){
+      menor_valor=valor_inst;
+      }
+      delayMicroseconds(100);
+      }
+
+Serial.print("Menor valor: ");
+Serial.println(menor_valor); 
+delay(1);
+ tensao_pico=map(menor_valor,2792,2200,0,174.3);
+ tensao_rms=tensao_pico/1.41;
+ if(menor_valor>2350){
+ tensao_rms=0;
+   }
+Serial.print(" TENSÃO DA REDE:  ");
+Serial.print(tensao_rms,1);
+Serial.print("V");
+Serial.println("");
+       vTaskDelay(300 / portTICK_PERIOD_MS);    }
+}
+
+void task_blynk(void *pvParameter)
+{
+
+   for (;;)
+   {
+       Blynk.run();
+       Blynk.virtualWrite(V0, tensao_rms);
+       vTaskDelay(50 / portTICK_PERIOD_MS);
+   }
+}
+
+void task_senoide(void *pvParameter)
+{
+
+   for (;;)
+   {
+     int senoide=analogRead(34);
+       Blynk.run();
+       Blynk.virtualWrite(V1, senoide/25);
+       vTaskDelay(377 / portTICK_PERIOD_MS);    }
+}

@@ -27,8 +27,8 @@ def main():
     gc.enable()
 
     # Wi-Fi credentials
-    SSID = "wilu"
-    PASSWORD = '9,-E"$_z/L."'
+    SSID = ""
+    PASSWORD = ''
 
     connect_wlan(SSID, PASSWORD)
 
