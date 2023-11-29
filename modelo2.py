@@ -1,18 +1,19 @@
 from tkinter import Button
 from tkinter import Label
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class LineGraph:
-    def __init__(self, master, row, column):
+    def __init__(self, master, row, rowspan, column, columnspan):
         # Crear una figura y un eje
         self.fig, self.ax = plt.subplots()
 
         # Crear un canvas
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
-        self.canvas.get_tk_widget().grid(row=row, column=column)
+        self.canvas.get_tk_widget().grid(
+            row=row, rowspan=rowspan, column=column, columnspan=columnspan
+        )
 
     def update_graph(self, x, y):
         # Dibujar el gráfico de líneas
@@ -102,11 +103,6 @@ class Interface():
 
         self.master.title('Interfaz')
 
-        self.current_data = [0]
-        self.voltage_data = [0]
-        self.line = None
-        self.canvas = None
-
         # labels
         self.final_work = MyLayout(
             text="TRABAJO FINAL",
@@ -160,24 +156,11 @@ class Interface():
                 row=5, column=3, sticky="w", pady=2, padx=2
             )
 
-        # # Datos para el eje X y el eje Y
-        # x = np.linspace(0, 2*np.pi, 100)
-        # y = np.sin(x)
-
-        # # Crear una figura y un eje
-        # self.fig, self.ax = plt.subplots()
-
-        # # Dibujar el gráfico de líneas
-        # self.ax.plot(x, y)
-
-        # # Crear un canvas y mostrar el gráfico en él
-        # self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas)
-        # self.canvas.draw()
-        # self.canvas.get_tk_widget().grid(
-        #     row=7, column=0, columnspan=5, pady=8, padx=8
-        # )
-
-        self.current_graph = LineGraph(self.master, row=7, column=0)
-        self.voltage_graph = LineGraph(self.master, row=8, column=0)
-        self.temperature_graph = LineGraph(self.master, row=9, column=0)
-        self.humidity_graph = LineGraph(self.master, row=10, column=0)
+        self.current_graph = LineGraph(
+            self.master, row=7, rowspan=2, column=0, columnspan=5
+            )
+        self.voltage_graph = LineGraph(
+            self.master, row=10, rowspan=2, column=0, columnspan=5
+            )
+        # self.temperature_graph = LineGraph(self.master, row=9, column=0)
+        # self.humidity_graph = LineGraph(self.master, row=10, column=0)

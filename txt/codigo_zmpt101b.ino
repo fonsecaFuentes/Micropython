@@ -1,18 +1,3 @@
-// AC Voltage Sensor without LCD By Solarduino (Revision 2)
-
-// Note Summary
-// Note :  Safety is very important when dealing with electricity. We take no responsibilities while you do it at your own risk.
-// Note :  This AC Votlage Sensor Code is for Single Phase AC Voltage transformer ZMPT101B module use.
-// Note :  The value shown in Serial Monitor is refreshed every second and is the average value of 4000 sample readings.
-// Note :  The voltage measured is the Root Mean Square (RMS) value.
-// Note :  The analog value per sample is squared and accumulated for every 4000 samples before being averaged. The averaged value is then getting square-rooted.
-// Note :  The auto calibration (voltageOffset1) is using averaged analogRead value of 4000 samples.
-// Note :  The auto calibration (currentOffset2) is using calculated RMS current value including currentOffset1 value for calibration.
-// Note :  The unit provides reasonable accuracy and may not be comparable with other expensive branded and commercial product.
-// Note :  All credit shall be given to Solarduino.
-
-/*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/ ////////////*/
-
 
 int decimalPrecision = 2; // decimal places for all values shown in LED Display & Serial Monitor
 int VoltageAnalogInputPin = A2;    // Which pin to measure voltage Value (Pin A0 is reserved for button function)
@@ -66,6 +51,7 @@ void loop()
         mediaVoltajeOffset = lecturaMuesraOffset / voltajeContadorMuestras;         // Calcula el valor medio del offset.
         voltajeMedio = voltajeSumarMuestras / voltajeContadorMuestras;              // Calcula el valor medio de las lecturas.
         mediaVoltajeRMS = (sqrt(voltajeMedio)) * 1.5;                               // Calculamos el valor RMS.
+        // Esta variable esta en el codigo original, pero no le encuentro el sentido
         ajusteMediaVoltajeRMS = mediaVoltajeRMS + voltajeOffset2;                   // Al valor RMS le añadimos el offset2.
         voltajeFinalRMS = mediaVoltajeRMS + voltajeOffset2;                         // Al valor final RMS tambien le añadimos el offset2.
         if (voltajeFinalRMS <= 2.5) voltajeFinalRMS = 0;                            // se el voltaje es menos a 2.5 imprimimos 0 para evitar valores negativos.
