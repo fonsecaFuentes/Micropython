@@ -16,7 +16,7 @@ sumaMuestraOffset = 0
 activarOffset = 1
 
 
-def main():
+def voltage_end():
     global voltajeOffset1
     global voltajeOffset2
     global voltajeSumarMuestras
@@ -74,6 +74,7 @@ def main():
 
         # Imprime el resultado por consola
         print("El valor de voltaje RMS es: {} V".format(voltajeFinalRMS))
+        return voltajeFinalRMS
 
         # Resetea las variables para la siguiente iteración
         voltajeSumarMuestras = 0
@@ -129,5 +130,5 @@ def setearOffset2():
         print("Fin de la calibración")
 
 
-while True:
-    main()
+# while True:
+#     main()

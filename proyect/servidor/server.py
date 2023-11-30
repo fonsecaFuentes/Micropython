@@ -1,8 +1,14 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from queue import Queue
 import json
+
+data_queue = Queue()
 
 
 class S(BaseHTTPRequestHandler):
+    amps = None
+    voltage = None
+
     def _set_headers(self):
         self.send_response(200)
         self.send_header(keyword="Content-type", value="application/json")
@@ -21,7 +27,15 @@ class S(BaseHTTPRequestHandler):
         try:
             # Decodificar el JSON recibido
             data = json.loads(post_data.decode('utf-8'))
+            data = json.loads(data)
+
+            S.amps = float(data.get('Amperios')) if data.get(
+                'Amperios') is not None else None
+            S.voltage = float(data.get('Voltaje')) if data.get(
+                'Voltaje') is not None else None
             print("Datos recibidos:", data)
+            data_queue.put(data)
+
             self.send_response(200)
             self.end_headers()
             response_text = 'Solicitud POST recibida con éxito'
@@ -35,17 +49,17 @@ class S(BaseHTTPRequestHandler):
                 f'Error en el JSON recibido: {str(e)}'.encode('utf-8'))
 
 
-def run(server_class=HTTPServer, handler_class=S, port=80):
+def run_server(server_class=HTTPServer, handler_class=S, port=80):
     server_address = ("", port)  # esto hace correr el servidor en el ip local
     servidor = server_class(server_address, handler_class)
     print("Starting server....")
     servidor.serve_forever()
 
 
-if __name__ == "__main__":
-    from sys import argv
+# if __name__ == "__main__":
+#     from sys import argv
 
-if len(argv) == 2:
-    run(port=int(argv[1]))
-else:
-    run()
+# if len(argv) == 2:
+#     run_server(port=int(argv[1]))
+# else:
+#     run_server()

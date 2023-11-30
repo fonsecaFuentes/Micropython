@@ -2,9 +2,11 @@ from machine import Timer
 import urequests
 import ujson
 from acs712 import read_current
+from zmpt101b import voltage_end
 
 # Configuración del sensor ACS712
-sensor = read_current()
+sensor_acs712 = read_current()
+sensor_zmpt101b = voltage_end()
 
 # Configuración del servidor
 url = 'http://192.168.0.137'
@@ -20,7 +22,9 @@ def post():
     response = None
     try:
         # Realizar una solicitud POST con las variables
-        data = ujson.dumps({'Amperios': str(sensor)})
+        data = ujson.dumps(
+            {'Amperios': str(sensor_acs712), 'Voltaje': str(sensor_zmpt101b)}
+        )
         response = urequests.post(url, json=data)
 
         # Verificar la respuesta
