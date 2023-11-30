@@ -2,7 +2,7 @@ from machine import ADC
 import math
 import utime
 
-VoltageAnalogInputPin = ADC(0)
+VoltageAnalogInputPin = ADC(35)
 
 voltajeOffset1 = 0
 voltajeOffset2 = 0
@@ -12,6 +12,8 @@ voltajeUltimaLectura = utime.ticks_us()
 lecturaMuesraOffset = 0
 mediaVoltajeRMS = 0
 sumaMuestraOffset = 0
+offsetUltimaLectura = 0
+contadorOffset = 0
 # Variable para controlar el estado del offset
 activarOffset = 1
 
@@ -27,8 +29,6 @@ def voltage_end():
     global mediaVoltajeRMS
     global sumaMuestraOffset
 
-    print("Inicio de la calibración")
-
     # Chequea si se debe realizar el offset 1 o el offset 2
     if activarOffset == 1:
         setearOffset1()
@@ -37,7 +37,7 @@ def voltage_end():
         setearOffset2()
 
     # Realiza la lectura analógica cada 1 milisegundo
-    if utime.ticks.us() >= voltajeUltimaLectura + 1000:
+    if utime.ticks_us() >= voltajeUltimaLectura + 1000:
         if activarOffset > 0:
             # Lectura del offset durante el cálculo
             lecturaMuesraOffset = VoltageAnalogInputPin.read() - 512
@@ -63,30 +63,27 @@ def voltage_end():
         mediaVoltajeRMS = (math.sqrt(voltajeMedio)) * 1.5
 
         # Ajusta el valor RMS con el offset2
-        """Esta variable esta en el codigo original,
-        pero no le encuentro el sentido"""
-        ajusteMediaVoltajeRMS = mediaVoltajeRMS + voltajeOffset2
         voltajeFinalRMS = mediaVoltajeRMS + voltajeOffset2
 
         # Evita valores negativos
         if voltajeFinalRMS <= 2.5:
             voltajeFinalRMS = 0
 
-        # Imprime el resultado por consola
-        print("El valor de voltaje RMS es: {} V".format(voltajeFinalRMS))
-        return voltajeFinalRMS
-
         # Resetea las variables para la siguiente iteración
         voltajeSumarMuestras = 0
         voltajeContadorMuestras = 0
+
+        # Imprime el resultado por consola
+        # print("El valor de voltaje RMS es: {} V".format(voltajeFinalRMS))
+        return voltajeFinalRMS
 
 
 def setearOffset1():
     global voltajeOffset1
     global offsetUltimaLectura
-    global contadorOffset
     global mediaVoltajeOffset
     global activarOffset
+    global contadorOffset
 
     # Realiza una lectura cada 1 milisegundo
     if utime.ticks_us() >= offsetUltimaLectura + 1000:
@@ -99,6 +96,7 @@ def setearOffset1():
     if contadorOffset == 1500:
         # Actualiza el offset1
         voltajeOffset1 = - mediaVoltajeOffset
+        print(voltajeOffset1)
         # Pasamos a la siguiente etapa del cálculo del offset.
         activarOffset = 2
         # Reseteamos el contador.
@@ -108,9 +106,9 @@ def setearOffset1():
 def setearOffset2():
     global voltajeOffset2
     global offsetUltimaLectura
-    global contadorOffset
     global mediaVoltajeRMS
     global activarOffset
+    contadorOffset = 0
 
     # Realiza una lectura cada 1 milisegundo
     if utime.ticks_us() >= offsetUltimaLectura + 1000:
@@ -131,4 +129,4 @@ def setearOffset2():
 
 
 # while True:
-#     main()
+#     voltage_end()

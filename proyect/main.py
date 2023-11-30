@@ -9,7 +9,7 @@ sensor_acs712 = read_current()
 sensor_zmpt101b = voltage_end()
 
 # Configuración del servidor
-url = 'http://192.168.0.137'
+url = 'http://192.168.0.170'
 
 # Contador de ejecuciones
 executions_count = 0
