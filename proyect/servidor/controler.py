@@ -11,9 +11,9 @@ class Controller:
         self.root = root
         # Crear la ventana principal
         self.view = Interface(self.root)
-        # Llamar a la función update para actualizar
-        # los datos en la interfaz gráfica
-        self.view.update()
+        # # Llamar a la función update para actualizar
+        # # los datos en la interfaz gráfica
+        # self.view.update()
 
     def on_close(self):
         # Establecer una bandera para indicar que la ventana se está cerrando

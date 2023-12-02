@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from queue import Queue
+# from views import Interface
 import json
 
 data_queue = Queue()
@@ -33,8 +34,12 @@ class S(BaseHTTPRequestHandler):
                 'Amperios') is not None else None
             S.voltage = float(data.get('Voltaje')) if data.get(
                 'Voltaje') is not None else None
+            S.temp = float(data.get('Temperatura')) if data.get(
+                'Temperatura') is not None else None
+            S.hum = float(data.get('Humedad')) if data.get(
+                'Humedad') is not None else None
             print("Datos recibidos:", data)
-            data_queue.put(data)
+            data_queue.put((S.amps, S.voltage, S.temp, S.hum))
 
             self.send_response(200)
             self.end_headers()

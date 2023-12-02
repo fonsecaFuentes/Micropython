@@ -2,16 +2,11 @@ from machine import Timer
 import urequests
 import ujson
 from acs712 import read_current
-from zmpt101b import voltage_end
+from zmpt101b import read_voltage
 from dht22 import read_dht22
 
-# Configuración del sensor ACS712
-sensor_acs712 = read_current()
-sensor_zmpt101b = voltage_end()
-
-
 # Configuración del servidor
-url = 'http://192.168.0.170'
+url = 'http://192.168.85.129'
 
 # # Contador de ejecuciones
 # executions_count = 0
@@ -20,12 +15,10 @@ url = 'http://192.168.0.170'
 
 
 def post():
-    global executions_count
-    response = None
     try:
         # Leer los sensores
         sensor_acs712 = read_current()
-        sensor_zmpt101b = voltage_end()
+        sensor_zmpt101b = read_voltage()
         dht22_data = read_dht22()
 
         # Realizar una solicitud POST con las variables
@@ -40,11 +33,12 @@ def post():
         response = urequests.post(url, json=data)
 
         # Verificar la respuesta
-        # Lanzará una excepción en caso de error HTTP
-        response.raise_for_status()
-
-        print('Solicitud POST exitosa')
-        print(response.text)
+        if response.status_code == 200:
+            print('Solicitud POST exitosa')
+            print(response.text)
+        else:
+            print('Error HTTP: ', response.status_code)
+            print(response.text)
 
     except Exception as e:
         print('Error:', str(e))

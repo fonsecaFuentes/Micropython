@@ -3,7 +3,7 @@ from tkinter import Label
 from tkinter import StringVar
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from server import data_queue
+# from server import data_queue
 
 
 class LineGraph:
@@ -320,25 +320,31 @@ class Interface():
         # self.temperature_graph = LineGraph(self.master, row=9, column=0)
         # self.humidity_graph = LineGraph(self.master, row=10, column=0)
 
-    def update(self):
-        # Comprobar si la ventana todavía existe
-        if self.master.winfo_exists():
-            # Leer los datos de la cola
-            while not data_queue.empty():
-                amps, voltage = data_queue.get()
 
-                # Actualizar las graficas con los nuevos datos
-                self.current_graph.update_graph(amps)
-                self.voltage_graph.update_graph(voltage)
+interface = Interface()
 
-                # Actualizar las etiquetas con los nuevos datos
-                self.amps.config(text=f"Amperios: {amps}")
-                self.voltage.config(text=f"Voltaje: {voltage}")
 
-                # Solo programar la próxima actualización si la
-                # ventana no se está cerrando
-                if not self.closing:
-                    self.master.after(1000, self.update)
+# La función update se encarga de actualizar los datos en la interfaz gráfica
+def update(interface, data_queue):
+    # Comprobar si la ventana todavía existe
+    if interface.master.winfo_exists():
+        # Leer los datos de la cola
+        while not data_queue.empty():
+            amps, voltage = data_queue.get()
+            print(amps, voltage)
 
-            # # Actualización de etiquetas y gráficos en la interfaz gráfica
-            # self.master.after(1000, self.update)
+            # Actualizar las graficas con los nuevos datos
+            interface.current_graph.update_graph(amps)
+            interface.voltage_graph.update_graph(voltage)
+
+            # Actualizar las etiquetas con los nuevos datos
+            interface.amps.config(text=f"Amperios: {amps}")
+            interface.voltage.config(text=f"Voltaje: {voltage}")
+
+            # Solo programar la próxima actualización si la
+            # ventana no se está cerrando
+            if not interface.closing:
+                interface.master.after(1000, update, interface, data_queue)
+
+        # # Actualización de etiquetas y gráficos en la interfaz gráfica
+        # self.master.after(1000, self.update)
