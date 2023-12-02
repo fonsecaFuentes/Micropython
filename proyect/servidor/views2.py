@@ -1,22 +1,17 @@
 import tkinter as tk
-from tkinter import StringVar
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from server import run_server
-import threading
+
+# Etiquetas como variables globales
+global temp_label, hum_label, amps_label, voltage_label
 
 
 def create_interface():
+    global temp_label, hum_label, amps_label, voltage_label
     master = tk.Tk()
     master.title('Interfaz')
 
     color = "#FB0909"
-
-    # Variables para amperios y voltaje
-    amps_value = StringVar()
-    voltage_value = StringVar()
-    temp_value = StringVar()
-    hum_value = StringVar()
 
     # Crear una figura y un eje
     fig, ax = plt.subplots(figsize=(4, 2.5))
@@ -26,7 +21,9 @@ def create_interface():
     amps_graph.get_tk_widget().grid(row=9, rowspan=2, column=0, columnspan=4)
 
     voltage_graph = FigureCanvasTkAgg(fig, master=master)
-    voltage_graph.get_tk_widget().grid(row=14, rowspan=2, column=0, columnspan=4)
+    voltage_graph.get_tk_widget().grid(
+        row=14, rowspan=2, column=0, columnspan=4
+    )
 
     temp_graph = FigureCanvasTkAgg(fig, master=master)
     temp_graph.get_tk_widget().grid(row=9, rowspan=2, column=5, columnspan=4)
@@ -37,7 +34,7 @@ def create_interface():
     # Crear Layout
     layout_amps = tk.Label(
         master,
-        text="Amperios",
+        text="Temperatura y Humedad",
         bg="DarkOrchid3",
         fg="thistle1",
         width=40
@@ -54,7 +51,7 @@ def create_interface():
 
     layout_voltage = tk.Label(
         master,
-        text="Voltaje",
+        text="Voltaje y Amperios",
         bg="DarkOrchid3",
         fg="thistle1",
         width=40
@@ -71,12 +68,12 @@ def create_interface():
 
     layout_amps_graph = tk.Label(
         master,
-        text="Amperios Gráfica",
+        text="Temperatura y Humedad Gráfica",
         bg="DarkOrchid3",
         fg="thistle1",
         width=40
     )
-    
+
     layout_amps_graph.grid(
         row=7,
         rowspan=2,
@@ -89,7 +86,7 @@ def create_interface():
 
     layout_voltage_graph = tk.Label(
         master,
-        text="Voltaje Gráfica",
+        text="Voltaje y Amperios Gráfica",
         bg="DarkOrchid3",
         fg="thistle1",
         width=40
@@ -182,11 +179,17 @@ def create_interface():
     )
 
     # Crear una etiqueta
+    temp_label = tk.Label(master, text="Temperatura:")
+    temp_label.grid(row=2, column=3, sticky="w", pady=2, padx=2)
+
+    hum_label = tk.Label(master, text="Humedad:")
+    hum_label.grid(row=5, column=3, sticky="w", pady=2, padx=2)
+
     amps_label = tk.Label(master, text="Amperios:")
-    amps_label.grid(row=2, column=4, sticky="w", pady=2, padx=2)
+    amps_label.grid(row=2, column=6, sticky="w", pady=2, padx=2)
 
     voltage_label = tk.Label(master, text="Voltaje:")
-    voltage_label.grid(row=5, column=4, sticky="w", pady=2, padx=2)
+    voltage_label.grid(row=5, column=6, sticky="w", pady=2, padx=2)
 
     # Crear un botón
     boton_relay1 = tk.Button(master, text="ENCENDER 1")
@@ -201,38 +204,12 @@ def create_interface():
     boton_relay4 = tk.Button(master, text="ENCENDER 4")
     boton_relay4.grid(row=20, column=8, sticky="nsew", pady=8, padx=8)
 
-    # Iniciar el servidor en un hilo separado
-    server_hilo = threading.Thread(target=run_server)
-    server_hilo.start()
-
     # Inicia el bucle principal de Tkinter
     master.mainloop()
 
 
-def actualizar_valores():
-    global temperatura_data  # Accede a la variable global
-    global bar  # Accede a la variable global
+def get_labels():
+    return temp_label, hum_label, amps_label, voltage_label
 
-    # Accede a las variables de instancia de la clase S
-    temperatura = S.temperatura
-    humedad = S.humedad
-    lux = S.lux
-
-    # Actualiza las etiquetas con los valores de S
-    etiqueta_temperatura.config(text=f"Temperatura: {temperatura}")
-    etiqueta_humedad.config(text=f"Humedad: {humedad}")
-    etiqueta_lux.config(text=f"Lux: {lux}")
-
-    # Actualiza los datos de temperatura para el gráfico
-    temperatura_data[0] = temperatura
-
-    if bar is not None:  # Verifica si bar no es None antes de acceder a él
-        bar[0].set_height(temperatura_data[0])
-        canvas.draw()
-
-    # Programa una llamada a esta función nuevamente después de un tiempo
-    ventana.after(1000, actualizar_valores)
-
-
-# Crea la interfaz gráfica
-create_interface()
+# # Crea la interfaz gráfica
+# create_interface()
