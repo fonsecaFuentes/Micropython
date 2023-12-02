@@ -1,132 +1,92 @@
-from machine import ADC
-import math
-import utime
-
-VoltageAnalogInputPin = ADC(35)
-
-voltajeOffset1 = 0
-voltajeOffset2 = 0
-voltajeSumarMuestras = 0
-voltajeContadorMuestras = 0
-voltajeUltimaLectura = utime.ticks_us()
-lecturaMuesraOffset = 0
-mediaVoltajeRMS = 0
-sumaMuestraOffset = 0
-offsetUltimaLectura = 0
-contadorOffset = 0
-# Variable para controlar el estado del offset
-activarOffset = 1
+# Importar las librerías necesarias
+import machine
+import time
 
 
-def voltage_end():
-    global voltajeOffset1
-    global voltajeOffset2
-    global voltajeSumarMuestras
-    global voltajeContadorMuestras
-    global lecturaMuesraOffset
-    global voltajeUltimaLectura
-    global mediaVoltajeOffset
-    global mediaVoltajeRMS
-    global sumaMuestraOffset
+# Crear la clase ZMPT101B
+class ZMPT101B:
+    # Inicializar la clase con el pin y el voltaje de referencia
+    def __init__(self, pin, vref):
+        # Crear un objeto ADC para leer el pin analógico
+        self.adc = machine.ADC(machine.Pin(pin))
+        # Establecer el rango del ADC según el voltaje de referencia
+        self.adc.atten(
+            machine.ADC.ATTN_0DB if vref ==
+            1.0 else machine.ADC.ATTN_2_5DB if vref ==
+            1.4 else machine.ADC.ATTN_6DB if vref ==
+            2.0 else machine.ADC.ATTN_11DB
+        )
+        # Establecer el valor medio del sensor como la mitad del rango del ADC
+        self.offset = 2048 if vref == 1.0 else 4096
+        # Establecer el factor de calibración como 1 por defecto
+        self.calibration = 1
+        # Establecer el voltaje RMS y la frecuencia como 0 por defecto
+        self.voltage = 0
+        self.frequency = 0
 
-    # Chequea si se debe realizar el offset 1 o el offset 2
-    if activarOffset == 1:
-        setearOffset1()
+    # Calibrar el sensor con un valor conocido de voltaje RMS
+    def calibrate(self, real_voltage):
+        # Leer el valor máximo del sensor durante un ciclo
+        max_value = 0
+        start_time = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), start_time) < 20:
+            value = self.adc.read()
+            if value > max_value:
+                max_value = value
+        # Calcular el factor de calibración como la relación
+        # entre el voltaje real y el voltaje medido
+        measured_voltage = (max_value - self.offset) * 0.707 * 0.0373
+        self.calibration = real_voltage / measured_voltage
 
-    if activarOffset == 2:
-        setearOffset2()
+    # Obtener el voltaje RMS del sensor
+    def getVoltage(self):
+        # Leer el valor máximo y mínimo del sensor durante un ciclo
+        max_value = 0
+        min_value = 4096
+        start_time = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), start_time) < 20:
+            value = self.adc.read()
+            if value > max_value:
+                max_value = value
+            if value < min_value:
+                min_value = value
+        # Calcular el voltaje RMS usando el factor de calibración
+        # y el valor medio del sensor
+        self.voltage = ((max_value - min_value) / 2.0 -
+                        self.offset) * 0.707 * 0.0373 * self.calibration
+        # Devolver el voltaje RMS
+        return self.voltage
 
-    # Realiza la lectura analógica cada 1 milisegundo
-    if utime.ticks_us() >= voltajeUltimaLectura + 1000:
-        if activarOffset > 0:
-            # Lectura del offset durante el cálculo
-            lecturaMuesraOffset = VoltageAnalogInputPin.read() - 512
-            sumaMuestraOffset += lecturaMuesraOffset
-            if activarOffset == 1:
-                setearOffset1()
-            if activarOffset == 2:
-                setearOffset2()
-
-    # Calcula el voltaje actual y acumula la suma de muestras al cuadrado
-    voltajeActual = (VoltageAnalogInputPin.read() - 512) + voltajeOffset1
-    voltajeSumarMuestras += voltajeActual ** 2
-    voltajeContadorMuestras += 1
-    voltajeUltimaLectura = utime.ticks_us()
-
-    # Cuando se han acumulado 1000 lecturas
-    if voltajeContadorMuestras == 1000:
-        # Calcula la media del offset y el valor medio de las lecturas
-        mediaVoltajeOffset = lecturaMuesraOffset / voltajeContadorMuestras
-        voltajeMedio = voltajeSumarMuestras / voltajeContadorMuestras
-
-        # Calcula el valor RMS
-        mediaVoltajeRMS = (math.sqrt(voltajeMedio)) * 1.5
-
-        # Ajusta el valor RMS con el offset2
-        voltajeFinalRMS = mediaVoltajeRMS + voltajeOffset2
-
-        # Evita valores negativos
-        if voltajeFinalRMS <= 2.5:
-            voltajeFinalRMS = 0
-
-        # Resetea las variables para la siguiente iteración
-        voltajeSumarMuestras = 0
-        voltajeContadorMuestras = 0
-
-        # Imprime el resultado por consola
-        # print("El valor de voltaje RMS es: {} V".format(voltajeFinalRMS))
-        return voltajeFinalRMS
-
-
-def setearOffset1():
-    global voltajeOffset1
-    global offsetUltimaLectura
-    global mediaVoltajeOffset
-    global activarOffset
-    global contadorOffset
-
-    # Realiza una lectura cada 1 milisegundo
-    if utime.ticks_us() >= offsetUltimaLectura + 1000:
-        # Variable para contar el número de lecturas.
-        contadorOffset += 1
-        # Actualiza el tiempo para la siguiente lectura
-        offsetUltimaLectura = utime.ticks_us()
-
-    # Cuando se han realizado 1500 lecturas
-    if contadorOffset == 1500:
-        # Actualiza el offset1
-        voltajeOffset1 = - mediaVoltajeOffset
-        print(voltajeOffset1)
-        # Pasamos a la siguiente etapa del cálculo del offset.
-        activarOffset = 2
-        # Reseteamos el contador.
-        contadorOffset = 0
+    # Obtener la frecuencia del sensor
+    def getFrequency(self):
+        # Contar el número de cruces por cero del sensor durante un segundo
+        zero_crosses = 0
+        last_value = self.adc.read()
+        start_time = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), start_time) < 1000:
+            value = self.adc.read()
+            if (last_value < self.offset and value > self.offset) or (
+                last_value > self.offset and value < self.offset
+            ):
+                zero_crosses += 1
+            last_value = value
+        # Calcular la frecuencia como la mitad del número de cruces por cero
+        self.frequency = zero_crosses / 2.0
+        # Devolver la frecuencia
+        return self.frequency
 
 
-def setearOffset2():
-    global voltajeOffset2
-    global offsetUltimaLectura
-    global mediaVoltajeRMS
-    global activarOffset
-    contadorOffset = 0
-
-    # Realiza una lectura cada 1 milisegundo
-    if utime.ticks_us() >= offsetUltimaLectura + 1000:
-        # Variable para contar el número de lecturas.
-        contadorOffset += 1
-        # Actualiza el tiempo para la siguiente lectura
-        offsetUltimaLectura = utime.ticks_us()
-
-    # Cuando se han realizado 2500 lecturas
-    if contadorOffset == 2500:
-        # Actualiza el offset2
-        voltajeOffset2 = - mediaVoltajeRMS
-        # Termina el cálculo del offset
-        activarOffset = 0
-        # Resetea el contador
-        contadorOffset = 0
-        print("Fin de la calibración")
+# Crear un objeto de la clase ZMPT101B con el pin 34
+# y el voltaje de referencia de 3.3V
+sensor = ZMPT101B(33, 3.3)
+# Calibrar el sensor con un valor conocido de 220V RMS
+sensor.calibrate(220)
+# Obtener el voltaje RMS y la frecuencia del sensor
 
 
-# while True:
-#     voltage_end()
+def read_voltage():
+    voltage = sensor.getVoltage()
+    return voltage
+# Imprimir los resultados
+# print("Voltage: {:.2f} V".format(voltage))
+# print("Frequency: {:.2f} Hz".format(frequency))

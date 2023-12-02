@@ -3,6 +3,7 @@ import urequests
 import ujson
 from acs712 import read_current
 from zmpt101b import voltage_end
+from dht22 import read_dht22
 
 # Configuración del sensor ACS712
 sensor_acs712 = read_current()
@@ -23,7 +24,12 @@ def post():
     try:
         # Realizar una solicitud POST con las variables
         data = ujson.dumps(
-            {'Amperios': str(sensor_acs712), 'Voltaje': str(sensor_zmpt101b)}
+            {
+                'Amperios': str(sensor_acs712),
+                'Voltaje': str(sensor_zmpt101b),
+                'Temperatura': str(read_dht22()['Temperatura']),
+                'Humedad': str(read_dht22()['Humedad'])
+            }
         )
         response = urequests.post(url, json=data)
 
@@ -37,13 +43,14 @@ def post():
     except Exception as e:
         print('Error:', str(e))
         print('---------------------------------')
+        tim.deinit()
 
         executions_count += 1
 
         # Detener el temporizador después de un número máximo de ejecuciones
-        if executions_count >= max_executions:
-            # Detener el temporizador
-            tim.deinit()
+        # if executions_count >= max_executions:
+        #     # Detener el temporizador
+        #     tim.deinit()
 
     # Cierre de la conexión.
     if response:
