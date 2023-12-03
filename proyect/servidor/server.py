@@ -1,9 +1,13 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-# import threading
+import valores
 import json
 
 
 class S(BaseHTTPRequestHandler):
+    amps = None
+    voltage = None
+    temp = None
+    hum = None
 
     def _set_headers(self):
         self.send_response(200)
@@ -25,13 +29,13 @@ class S(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             data = json.loads(data)
 
-            S.amps = float(data.get('Amperios')) if data.get(
+            valores.amps = float(data.get('Amperios')) if data.get(
                 'Amperios') is not None else None
-            S.voltage = float(data.get('Voltaje')) if data.get(
+            valores.voltage = float(data.get('Voltaje')) if data.get(
                 'Voltaje') is not None else None
-            S.temp = float(data.get('Temperatura')) if data.get(
+            valores.temperatura = float(data.get('Temperatura')) if data.get(
                 'Temperatura') is not None else None
-            S.hum = float(data.get('Humedad')) if data.get(
+            valores.humedad = float(data.get('Humedad')) if data.get(
                 'Humedad') is not None else None
             print("Datos recibidos:", data)
 
