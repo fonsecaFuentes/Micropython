@@ -1,11 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from views2 import create_interface
-from queue import Queue
 import threading
-from views2 import get_labels
+# from views2 import get_labels
 import json
-
-data_queue = Queue()
 
 
 class S(BaseHTTPRequestHandler):
@@ -41,7 +38,6 @@ class S(BaseHTTPRequestHandler):
             S.hum = float(data.get('Humedad')) if data.get(
                 'Humedad') is not None else None
             print("Datos recibidos:", data)
-            data_queue.put((S.amps, S.voltage, S.temp, S.hum))
 
             self.send_response(200)
             self.end_headers()
@@ -63,34 +59,31 @@ def run_server(server_class=HTTPServer, handler_class=S, port=80):
     servidor.serve_forever()
 
 
-def actualizar_valores():
-    global temperatura_data  # Accede a la variable global
-    global bar  # Accede a la variable global
+# def actualizar_valores():
+#     # Accede a las variables de instancia de la clase S
+#     temperatura = S.temperatura
+#     humedad = S.humedad
+#     amperios = S.amperios
+#     voltaje = S.voltaje
 
-    # Accede a las variables de instancia de la clase S
-    temperatura = S.temperatura
-    humedad = S.humedad
-    amperios = S.amperios
-    voltaje = S.voltaje
+#     # Obtener las etiquetas
+#     temp_label, hum_label, amps_label, voltage_label = get_labels()
 
-    # Obtener las etiquetas
-    temp_label, hum_label, amps_label, voltage_label = get_labels()
+#     # Actualiza las etiquetas con los valores de S
+#     temp_label.config(text=f"Temperatura: {temperatura}")
+#     hum_label.config(text=f"Humedad: {humedad}")
+#     amps_label.config(text=f"Amperios: {amperios}")
+#     voltage_label.config(text=f"Voltaje: {voltaje}")
 
-    # Actualiza las etiquetas con los valores de S
-    temp_label.config(text=f"Temperatura: {temperatura}")
-    hum_label.config(text=f"Humedad: {humedad}")
-    amps_label.config(text=f"Amperios: {amperios}")
-    voltage_label.config(text=f"Voltaje: {voltaje}")
+#     # Actualiza los datos de temperatura para el gráfico
+#     temperatura_data[0] = temperatura
 
-    # Actualiza los datos de temperatura para el gráfico
-    temperatura_data[0] = temperatura
+#     if bar is not None:  # Verifica si bar no es None antes de acceder a él
+#         bar[0].set_height(temperatura_data[0])
+#         canvas.draw()
 
-    if bar is not None:  # Verifica si bar no es None antes de acceder a él
-        bar[0].set_height(temperatura_data[0])
-        canvas.draw()
-
-    # Programa una llamada a esta función nuevamente después de un tiempo
-    ventana.after(1000, actualizar_valores)
+#     # Programa una llamada a esta función nuevamente después de un tiempo
+#     after(1000, actualizar_valores)
 
 
 if __name__ == "__main__":

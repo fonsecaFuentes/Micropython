@@ -1,13 +1,14 @@
 import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from server import S
 
 # Etiquetas como variables globales
-global temp_label, hum_label, amps_label, voltage_label
+global temp_label, hum_label, amps_label, voltage_label, master
 
 
 def create_interface():
-    global temp_label, hum_label, amps_label, voltage_label
+    global temp_label, hum_label, amps_label, voltage_label, master
     master = tk.Tk()
     master.title('Interfaz')
 
@@ -204,12 +205,25 @@ def create_interface():
     boton_relay4 = tk.Button(master, text="ENCENDER 4")
     boton_relay4.grid(row=20, column=8, sticky="nsew", pady=8, padx=8)
 
+    # Inicia la actualización de las etiquetas
+    update_labels()
+
     # Inicia el bucle principal de Tkinter
     master.mainloop()
 
 
-def get_labels():
-    return temp_label, hum_label, amps_label, voltage_label
+def update_labels():
+    # Actualiza las etiquetas con los valores de S
+    temp_label.config(text=f"Temperatura: {S.temp}")
+    hum_label.config(text=f"Humedad: {S.hum}")
+    amps_label.config(text=f"Amperios: {S.amps}")
+    voltage_label.config(text=f"Voltaje: {S.voltage}")
+
+    # Llamada a esta función nuevamente después de un tiempo
+    master.after(1000, update_labels)
+
+# def get_labels():
+#     return temp_label, hum_label, amps_label, voltage_label
 
 # # Crea la interfaz gráfica
 # create_interface()
