@@ -1,7 +1,8 @@
 import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from server import S
+from server import run_server, S
+import threading
 
 # Etiquetas como variables globales
 global temp_label, hum_label, amps_label, voltage_label, master
@@ -205,13 +206,11 @@ def create_interface():
     boton_relay4 = tk.Button(master, text="ENCENDER 4")
     boton_relay4.grid(row=20, column=8, sticky="nsew", pady=8, padx=8)
 
-    # Inicia la actualización de las etiquetas
-    update_labels()
-
     # Inicia el bucle principal de Tkinter
     master.mainloop()
 
 
+# Inicia la actualización de las etiquetas
 def update_labels():
     # Actualiza las etiquetas con los valores de S
     temp_label.config(text=f"Temperatura: {S.temp}")
@@ -220,10 +219,14 @@ def update_labels():
     voltage_label.config(text=f"Voltaje: {S.voltage}")
 
     # Llamada a esta función nuevamente después de un tiempo
-    master.after(1000, update_labels)
+    master.after(1000, lambda: update_labels)
 
-# def get_labels():
-#     return temp_label, hum_label, amps_label, voltage_label
 
-# # Crea la interfaz gráfica
-# create_interface()
+if __name__ == "__main__":
+    # Iniciar el servidor en un hilo separado
+    server_thread = threading.Thread(target=run_server)
+    server_thread.daemon = True
+    server_thread.start()
+    create_interface()
+    update_labels()
+    # run_server()
