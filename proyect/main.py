@@ -6,7 +6,7 @@ from zmpt101b import read_voltage
 from dht22 import read_dht22
 
 # Configuración del servidor
-url = 'http://192.168.85.129'
+url = 'http://192.168.0.170'
 
 # # Contador de ejecuciones
 # executions_count = 0
