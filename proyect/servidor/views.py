@@ -1,350 +1,281 @@
-from tkinter import Button
-from tkinter import Label
-from tkinter import StringVar
+import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# from server import data_queue
+from server import run_server
+import threading
+import values
+
+# Variables globales para las etiquetas
+global temp_label, hum_label, amps_label, voltage_label, master
+
+# Variables globales para las graficas
+global temp_data, hum_data, amps_data, voltage_data
+temp_data = []
+hum_data = []
+amps_data = []
+voltage_data = []
 
 
-class LineGraph:
-    def __init__(self, master, row, rowspan, column, columnspan, figsize):
-        # Crear una figura y un eje
-        self.fig, self.ax = plt.subplots(figsize=figsize)
+def create_interface():
+    # Variables globales para las etiquetas
+    global temp_label, hum_label, amps_label, voltage_label, master
 
-        # Crear un canvas
-        self.canvas = FigureCanvasTkAgg(self.fig, master=master)
-        self.canvas.get_tk_widget().grid(
-            row=row, rowspan=rowspan, column=column, columnspan=columnspan
-        )
+    # Variables globales para las graficas
+    global temp_data, hum_data, amps_data, voltage_data
+    global temp_graph, hum_graph, amps_graph, voltage_graph
+    global canvas_temp, canvas_hum, canvas_amps, canvas_voltage
 
-    def update_graph(self, x, y):
-        # Dibujar el gráfico de líneas
-        self.ax.plot(x, y)
+    master = tk.Tk()
+    master.title('Interfaz')
 
-        # Mostrar el gráfico en el canvas
-        self.canvas.draw()
+    color = "#FB0909"
 
+    # Crear una figura y un eje
+    fig_temp, temp_graph = plt.subplots(figsize=(5, 3))
+    fig_temp.suptitle('Temperatura')
 
-# Clase MyButton para crear botones personalizados
-class MyButton():
-    def __init__(
-        self, parent,
-        text, command,
-        row, column,
-        sticky, pady,
-        padx
-    ):
-        self.button = Button(parent, text=text, command=command)
-        self.button.grid(
-            row=row,
-            column=column,
-            sticky=sticky,
-            padx=padx,
-            pady=pady
-        )
+    fig_hum, hum_graph = plt.subplots(figsize=(5, 3))
+    fig_hum.suptitle('Humedad')
 
+    fig_amps, amps_graph = plt.subplots(figsize=(5, 3))
+    fig_amps.suptitle('Amperios')
 
-# Clase MyLabel para crear etiquetas personalizadas
-class MyLabel():
-    def __init__(
-        self, parent,
-        text,
-        row,
-        column,
-        sticky,
-        pady,
-        padx
-    ):
-        self.label = Label(parent, text=text)
-        self.label.grid(
-            row=row,
-            column=column,
-            sticky=sticky,
-            padx=padx,
-            pady=pady
-        )
+    fig_voltage, voltage_graph = plt.subplots(figsize=(5, 3))
+    fig_voltage.suptitle('Voltaje')
+    # ...
 
-    def configure(self, **kwargs):
-        self.label.configure(**kwargs)
+    # Crear un canvas
+    canvas_temp = FigureCanvasTkAgg(fig_temp, master=master)
+    canvas_temp.get_tk_widget().grid(row=9, rowspan=2, column=0, columnspan=4)
 
+    canvas_hum = FigureCanvasTkAgg(fig_hum, master=master)
+    canvas_hum.get_tk_widget().grid(row=9, rowspan=2, column=5, columnspan=4)
 
-# Clase MyLayout para crear diseños personalizados
-class MyLayout(MyLabel):
-    def __init__(
-        self, text,
-        bg, fg,
-        width,
-        row,
-        rowspan,
-        column,
-        columnspan,
-        sticky,
-        pady,
-        padx
-    ):
-        self.layout = Label(
-            text=text, bg=bg, fg=fg, width=width
-        )
-        self.layout.grid(
-            row=row,
-            column=column,
-            rowspan=rowspan,
-            columnspan=columnspan,
-            sticky=sticky,
-            pady=pady,
-            padx=padx
-        )
+    canvas_amps = FigureCanvasTkAgg(fig_amps, master=master)
+    canvas_amps.get_tk_widget().grid(row=14, rowspan=2, column=0, columnspan=4)
 
+    canvas_voltage = FigureCanvasTkAgg(fig_voltage, master=master)
+    canvas_voltage.get_tk_widget().grid(
+        row=14, rowspan=2, column=5, columnspan=4
+    )
 
-class Interface():
-    def __init__(self, master):
-        self.master = master
-        self.closing = False
-        self.color = "#FB0909"
+    # Crear Layout
+    layout_amps = tk.Label(
+        master,
+        text="Temperatura y Humedad",
+        bg="DarkOrchid3",
+        fg="thistle1",
+        width=40
+    )
+    layout_amps.grid(
+        row=0,
+        rowspan=2,
+        column=0,
+        columnspan=9,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.master.title('Interfaz')
+    layout_voltage = tk.Label(
+        master,
+        text="Voltaje y Amperios",
+        bg="DarkOrchid3",
+        fg="thistle1",
+        width=40
+    )
+    layout_voltage.grid(
+        row=3,
+        rowspan=2,
+        column=0,
+        columnspan=9,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        # Variables para amperios y voltaje
-        self.amps_value = StringVar()
-        self.voltage_value = StringVar()
+    layout_amps_graph = tk.Label(
+        master,
+        text="Temperatura y Humedad Gráfica",
+        bg="DarkOrchid3",
+        fg="thistle1",
+        width=40
+    )
 
-        # labels y layout
-        self.layout_amps = MyLayout(
-            text="Amperios",
-            bg="DarkOrchid3",
-            fg="thistle1",
-            width=40,
-            row=0,
-            rowspan=2,
-            column=0,
-            columnspan=5,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    layout_amps_graph.grid(
+        row=7,
+        rowspan=2,
+        column=0,
+        columnspan=9,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.layout_voltage = MyLayout(
-            text="Voltaje",
-            bg="DarkOrchid3",
-            fg="thistle1",
-            width=40,
-            row=3,
-            rowspan=2,
-            column=0,
-            columnspan=5,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    layout_voltage_graph = tk.Label(
+        master,
+        text="Voltaje y Amperios Gráfica",
+        bg="DarkOrchid3",
+        fg="thistle1",
+        width=40
+    )
+    layout_voltage_graph.grid(
+        row=12,
+        rowspan=2,
+        column=0,
+        columnspan=9,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.layout_amps_graph = MyLayout(
-            text="Amperios Gráfica",
-            bg="DarkOrchid3",
-            fg="thistle1",
-            width=40,
-            row=7,
-            rowspan=2,
-            column=0,
-            columnspan=5,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    layout_relay = tk.Label(
+        master,
+        text="Relay",
+        bg="DarkOrchid3",
+        fg="thistle1",
+        width=40
+    )
+    layout_relay.grid(
+        row=17,
+        rowspan=2,
+        column=0,
+        columnspan=9,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.layout_graph_voltage = MyLayout(
-            text="Voltaje Gráfica",
-            bg="DarkOrchid3",
-            fg="thistle1",
-            width=40,
-            row=12,
-            rowspan=2,
-            column=0,
-            columnspan=5,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    relay_indicator1 = tk.Label(
+        master,
+        text="",
+        bg=color,
+        fg="#000000",
+        width=15
+    )
+    relay_indicator1.grid(
+        row=22,
+        column=0,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.layout_relay = MyLayout(
-            text="Relay",
-            bg="DarkOrchid3",
-            fg="thistle1",
-            width=40,
-            row=18,
-            rowspan=2,
-            column=0,
-            columnspan=5,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    relay_indicator1 = tk.Label(
+        master,
+        text="",
+        bg=color,
+        fg="#000000",
+        width=15
+    )
+    relay_indicator1.grid(
+        row=22,
+        column=2,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.relay_indicator1 = MyLayout(
-            text="",
-            bg=self.color,
-            fg="#000000",
-            width=10,
-            row=21,
-            rowspan=1,
-            column=0,
-            columnspan=1,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    relay_indicator3 = tk.Label(
+        master,
+        text="",
+        bg=color,
+        fg="#000000",
+        width=15
+    )
+    relay_indicator3.grid(
+        row=22,
+        column=6,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.relay_indicator2 = MyLayout(
-            text="",
-            bg=self.color,
-            fg="#000000",
-            width=10,
-            row=21,
-            rowspan=1,
-            column=1,
-            columnspan=1,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    relay_indicator3 = tk.Label(
+        master,
+        text="",
+        bg=color,
+        fg="#000000",
+        width=15
+    )
+    relay_indicator3.grid(
+        row=22,
+        column=8,
+        sticky="w" + "e",
+        pady=8,
+        padx=8
+    )
 
-        self.relay_indicator3 = MyLayout(
-            text="",
-            bg=self.color,
-            fg="#000000",
-            width=10,
-            row=21,
-            rowspan=1,
-            column=2,
-            columnspan=1,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    # Crear una etiqueta
+    temp_label = tk.Label(master, text="Temperatura:")
+    temp_label.grid(row=2, column=3, sticky="w", pady=2, padx=2)
 
-        self.relay_indicator4 = MyLayout(
-            text="",
-            bg=self.color,
-            fg="#000000",
-            width=10,
-            row=21,
-            rowspan=1,
-            column=3,
-            columnspan=1,
-            sticky="w" + "e",
-            pady=8,
-            padx=8
-        )
+    hum_label = tk.Label(master, text="Humedad:")
+    hum_label.grid(row=2, column=6, sticky="w", pady=2, padx=2)
 
-        self.amps = MyLabel(
-                self.master,
-                text="Amperios:",
-                row=2, column=1, sticky="w", pady=2, padx=2
-            )
+    amps_label = tk.Label(master, text="Amperios:")
+    amps_label.grid(row=5, column=3, sticky="w", pady=2, padx=2)
 
-        self.voltage = MyLabel(
-                self.master,
-                text="Voltaje:",
-                row=5, column=1, sticky="w", pady=2, padx=2
-            )
+    voltage_label = tk.Label(master, text="Voltaje:")
+    voltage_label.grid(row=5, column=6, sticky="w", pady=2, padx=2)
 
-        # Botones
-        self.boton_relay1 = MyButton(
-            self.master,
-            text="ENCENDER",
-            command=lambda: self.data_management.modify_item(
-                self.var_title,
-                self.var_gender,
-                self.var_developer,
-                self.var_price,
-                self.forms
-            ),
-            row=20, column=0, sticky="nsew", pady=8, padx=8
-        )
+    # Crear un botón
+    boton_relay1 = tk.Button(master, text="ENCENDER 1")
+    boton_relay1.grid(row=20, column=0, sticky="nsew", pady=8, padx=8)
 
-        self.boton_relay2 = MyButton(
-            self.master,
-            text="ENCENDER",
-            command=lambda: self.data_management.modify_item(
-                self.var_title,
-                self.var_gender,
-                self.var_developer,
-                self.var_price,
-                self.forms
-            ),
-            row=20, column=1, sticky="nsew", pady=8, padx=8
-        )
+    boton_relay2 = tk.Button(master, text="ENCENDER 2")
+    boton_relay2.grid(row=20, column=2, sticky="nsew", pady=8, padx=8)
 
-        self.boton_relay3 = MyButton(
-            self.master,
-            text="ENCENDER",
-            command=lambda: self.data_management.modify_item(
-                self.var_title,
-                self.var_gender,
-                self.var_developer,
-                self.var_price,
-                self.forms
-            ),
-            row=20, column=2, sticky="nsew", pady=8, padx=8
-        )
+    boton_relay3 = tk.Button(master, text="ENCENDER 3")
+    boton_relay3.grid(row=20, column=6, sticky="nsew", pady=8, padx=8)
 
-        self.boton_relay4 = MyButton(
-            self.master,
-            text="ENCENDER",
-            command=lambda: self.data_management.modify_item(
-                self.var_title,
-                self.var_gender,
-                self.var_developer,
-                self.var_price,
-                self.forms
-            ),
-            row=20, column=3, sticky="nsew", pady=8, padx=8
-        )
+    boton_relay4 = tk.Button(master, text="ENCENDER 4")
+    boton_relay4.grid(row=20, column=8, sticky="nsew", pady=8, padx=8)
 
-        # Graficas
-        self.current_graph = LineGraph(
-            self.master,
-            row=9,
-            rowspan=2,
-            column=0,
-            columnspan=4,
-            figsize=(4, 2.5)
-            )
-        self.voltage_graph = LineGraph(
-            self.master,
-            row=15,
-            rowspan=2,
-            column=0,
-            columnspan=4,
-            figsize=(4, 2.5)
-            )
-        # self.temperature_graph = LineGraph(self.master, row=9, column=0)
-        # self.humidity_graph = LineGraph(self.master, row=10, column=0)
+    update_labels()
+
+    # Inicia el bucle principal de Tkinter
+    master.mainloop()
 
 
-interface = Interface()
+# Inicia la actualización de la interfaz
+def update_labels():
+    # Actualizar las etiquetas
+    temp_label.config(text=f"Temperatura: {values.temperatura}")
+    hum_label.config(text=f"Humedad: {values.humedad}")
+    amps_label.config(text=f"Amperios: {values.amps}")
+    voltage_label.config(text=f"Voltaje: {values.voltage}")
+
+    # Actualizar nuevos valores a las listas
+    temp_data.append(values.temperatura)
+    hum_data.append(values.humedad)
+    amps_data.append(values.amps)
+    voltage_data.append(values.voltage)
+
+    # Actualizar las graficas
+    temp_graph.clear()
+    temp_graph.plot(temp_data, color="red")
+    canvas_temp.draw()
+
+    hum_graph.clear()
+    hum_graph.plot(hum_data, color="blue")
+    canvas_hum.draw()
+
+    amps_graph.clear()
+    amps_graph.plot(amps_data, color="green")
+    canvas_amps.draw()
+
+    voltage_graph.clear()
+    voltage_graph.plot(voltage_data, color="orange")
+    canvas_voltage.draw()
+
+    master.after(1000, update_labels)
 
 
-# La función update se encarga de actualizar los datos en la interfaz gráfica
-def update(interface, data_queue):
-    # Comprobar si la ventana todavía existe
-    if interface.master.winfo_exists():
-        # Leer los datos de la cola
-        while not data_queue.empty():
-            amps, voltage = data_queue.get()
-            print(amps, voltage)
-
-            # Actualizar las graficas con los nuevos datos
-            interface.current_graph.update_graph(amps)
-            interface.voltage_graph.update_graph(voltage)
-
-            # Actualizar las etiquetas con los nuevos datos
-            interface.amps.config(text=f"Amperios: {amps}")
-            interface.voltage.config(text=f"Voltaje: {voltage}")
-
-            # Solo programar la próxima actualización si la
-            # ventana no se está cerrando
-            if not interface.closing:
-                interface.master.after(1000, update, interface, data_queue)
-
-        # # Actualización de etiquetas y gráficos en la interfaz gráfica
-        # self.master.after(1000, self.update)
+if __name__ == "__main__":
+    # Iniciar el servidor en un hilo separado
+    server_thread = threading.Thread(target=run_server)
+    server_thread.daemon = True
+    server_thread.start()
+    create_interface()
+    # run_server()

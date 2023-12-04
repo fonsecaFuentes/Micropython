@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import values
+import valores
 import json
 
 
@@ -29,13 +29,13 @@ class S(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             data = json.loads(data)
 
-            values.amps = float(data.get('Amperios')) if data.get(
+            valores.amps = float(data.get('Amperios')) if data.get(
                 'Amperios') is not None else None
-            values.voltage = float(data.get('Voltaje')) if data.get(
+            valores.voltage = float(data.get('Voltaje')) if data.get(
                 'Voltaje') is not None else None
-            values.temperatura = float(data.get('Temperatura')) if data.get(
+            valores.temperatura = float(data.get('Temperatura')) if data.get(
                 'Temperatura') is not None else None
-            values.humedad = float(data.get('Humedad')) if data.get(
+            valores.humedad = float(data.get('Humedad')) if data.get(
                 'Humedad') is not None else None
             print("Datos recibidos:", data)
 
